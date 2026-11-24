@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="es" class="dark h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIUBA Path Explorer — Path 1: Somos Libres</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        sistemas: {
+                            base: '#6d28d9',
+                            light: '#8b5cf6',
+                            gradient: 'from-purple-950/90 via-purple-900/80 to-violet-950/90',
+                            border: 'border-purple-500/60',
+                            glow: 'rgba(139, 92, 246, 0.4)'
+                        },
+                        shared: {
+                            base: '#1e3a8a',
+                            light: '#3b82f6',
+                            gradient: 'from-blue-950/90 via-indigo-950/80 to-blue-900/90',
+                            border: 'border-blue-500/60',
+                            glow: 'rgba(59, 130, 246, 0.4)'
+                        },
+                        informatica: {
+                            base: '#065f46',
+                            light: '#10b981',
+                            gradient: 'from-emerald-950/90 via-teal-950/80 to-emerald-900/90',
+                            border: 'border-emerald-500/60',
+                            glow: 'rgba(16, 185, 129, 0.4)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        /* Card interactive effects */
+        .subject-card {
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+        }
+        .subject-card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* SVG Line drawing */
+        .dep-line {
+            transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        /* Custom backdrop blur modal */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        /* Subtle pulse for available nodes */
+        @keyframes subtle-pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+            50% { box-shadow: 0 0 18px rgba(59, 130, 246, 0.45); }
+        }
+        .pulse-available {
+            animation: subtle-pulse 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased text-slate-100 overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+            
+            <!-- App Title & Brand -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-500 p-[2px] shadow-md shadow-indigo-500/20">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400 text-lg"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-100 via-indigo-200 to-slate-300 bg-clip-text text-transparent">
+                        FIUBA Path Explorer
+                    </h1>
+                    <p class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Path 1: Somos Libres — Malla Curricular Interactiva
+                    </p>
+                </div>
+            </div>
+
+            <!-- Career Filter Tabs (RESTORED) -->
+            <div class="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800 shadow-inner">
+                <button id="btn-filter-all" onclick="setCareerFilter('all')" class="career-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-md">
+                    <i class="fa-solid fa-layer-group text-xs"></i>
+                    Ambas Carreras
+                </button>
+                <button id="btn-filter-sistemas" onclick="setCareerFilter('sistemas')" class="career-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                    Solo Sistemas
+                </button>
+                <button id="btn-filter-informatica" onclick="setCareerFilter('informatica')" class="career-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Solo Informática
+                </button>
+            </div>
+
+            <!-- Progress Summary Counters & Actions -->
+            <div class="flex items-center gap-3">
+                <button onclick="openModal('modal-help')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-indigo-400"></i>
+                    Guía & GitHub
+                </button>
+                <button onclick="exportProgress()" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors flex items-center gap-1.5" title="Exportar Progreso JSON">
+                    <i class="fa-solid fa-download text-emerald-400"></i>
+                    Exportar
+                </button>
+                <label class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-upload text-blue-400"></i>
+                    Importar
+                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="importProgress(event)">
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub-header Toolbar & Metrics Bar -->
+    <section class="bg-slate-900/50 border-b border-slate-800/60 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Dual Career Progress Meters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full md:w-auto">
+                <!-- Sistemas Progress -->
+                <div class="bg-purple-950/40 border border-purple-500/30 rounded-xl px-3.5 py-2 flex items-center gap-3 min-w-[240px]">
+                    <div class="w-8 h-8 rounded-lg bg-purple-900/50 flex items-center justify-center text-purple-400 border border-purple-500/40">
+                        <i class="fa-solid fa-laptop-code text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between text-xs font-semibold mb-1">
+                            <span class="text-purple-300">Lic. en Sistemas</span>
+                            <span id="text-progress-sistemas" class="text-purple-400">0 / 200 cr (0%)</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden p-[1px] border border-purple-900/40">
+                            <div id="bar-progress-sistemas" class="bg-gradient-to-r from-purple-600 to-violet-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informática Progress -->
+                <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-3.5 py-2 flex items-center gap-3 min-w-[240px]">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-900/50 flex items-center justify-center text-emerald-400 border border-emerald-500/40">
+                        <i class="fa-solid fa-microchip text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between text-xs font-semibold mb-1">
+                            <span class="text-emerald-300">Ing. en Informática</span>
+                            <span id="text-progress-informatica" class="text-emerald-400">0 / 226 cr (0%)</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden p-[1px] border border-emerald-900/40">
+                            <div id="bar-progress-informatica" class="bg-gradient-to-r from-emerald-600 to-teal-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search, Filters & Quick Actions -->
+            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+                
+                <!-- Search Box -->
+                <div class="relative flex-1 sm:w-48">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="search-input" placeholder="Buscar materia..." oninput="onSearchChange()"
+                        class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg pl-8 pr-3 py-1.5 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-600">
+                </div>
+
+                <!-- Status Filter Dropdown -->
+                <select id="status-filter" onchange="renderGrid()" class="bg-slate-950 text-slate-300 text-xs rounded-lg px-3 py-1.5 border border-slate-800 focus:border-indigo-500 outline-none transition-all cursor-pointer">
+                    <option value="all">Todas las materias</option>
+                    <option value="available">Solo Disponibles</option>
+                    <option value="approved">Solo Aprobadas</option>
+                    <option value="locked">Solo Bloqueadas</option>
+                </select>
+
+                <!-- Toggle Optativas Only -->
+                <button id="btn-toggle-optativas" onclick="toggleOptativasOnly()" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-950 text-slate-400 border border-slate-800 hover:border-slate-700 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-star text-amber-400"></i>
+                    Solo Optativas
+                </button>
+
+                <!-- Batch Actions Dropdown -->
+                <div class="relative group">
+                    <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+                        <i class="fa-solid fa-bolt text-xs"></i>
+                        Acciones Rápidas
+                        <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
+                    </button>
+                    <div class="absolute right-0 top-full mt-1 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-xl py-1 hidden group-hover:block z-50">
+                        <button onclick="approveCBC()" class="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-check-double text-indigo-400"></i>
+                            Aprobar todo el CBC
+                        </button>
+                        <button onclick="approveCareer('sistemas')" class="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-graduation-cap text-purple-400"></i>
+                            Aprobar Plan Sistemas
+                        </button>
+                        <button onclick="approveCareer('informatica')" class="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-graduation-cap text-emerald-400"></i>
+                            Aprobar Plan Informática
+                        </button>
+                        <div class="border-t border-slate-800 my-1"></div>
+                        <button onclick="resetProgress()" class="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/50 transition-colors flex items-center gap-2 font-medium">
+                            <i class="fa-solid fa-rotate-left text-rose-400"></i>
+                            Reiniciar Todo (0%)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Instant Reset Button (Direct Access) -->
+                <button onclick="resetProgress()" title="Reiniciar materias" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left text-xs"></i>
+                    Reiniciar
+                </button>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Color Legend Bar -->
+    <div class="bg-slate-950/90 border-b border-slate-900 px-4 py-2 text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-4">
+                <span class="font-semibold text-slate-300 text-[11px] uppercase tracking-wider">Leyenda de Carrera:</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded bg-gradient-to-r from-blue-900 to-indigo-800 border border-blue-500/60 inline-block"></span>
+                    <span class="text-slate-300">Núcleo / Compartida (Ambas)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded bg-gradient-to-r from-purple-950 to-violet-900 border border-purple-500/60 inline-block"></span>
+                    <span class="text-purple-300">Exclusiva Lic. Sistemas</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded bg-gradient-to-r from-emerald-950 to-teal-900 border border-emerald-500/60 inline-block"></span>
+                    <span class="text-emerald-300">Exclusiva Ing. Informática</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1.5">
+                    <span class="border border-dashed border-amber-400/80 bg-amber-500/10 text-amber-300 px-1.5 py-0.5 rounded text-[10px] font-bold">OPTATIVA</span>
+                    <span class="text-slate-400">Materia Electiva</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-lock text-slate-400 text-xs"></i>
+                    <span class="text-slate-400">Mantiene color saturado al estar bloqueada</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dynamic Curriculum Canvas Area -->
+    <main class="flex-1 relative overflow-auto p-4 md:p-6" id="main-scroll-container">
+        
+        <!-- SVG Bezier Connections Overlay -->
+        <svg id="svg-connections" class="absolute top-0 left-0 w-full h-full pointer-events-none z-10" style="min-width: 1200px; min-height: 800px;">
+            <defs>
+                <marker id="arrow-default" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#475569" />
+                </marker>
+                <marker id="arrow-active" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#38bdf8" />
+                </marker>
+                <marker id="arrow-approved" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+                </marker>
+            </defs>
+        </svg>
+
+        <!-- 5 Annual Columns Container -->
+        <div id="grid-container" class="relative z-20 min-w-[1250px] grid grid-cols-5 gap-4 md:gap-6 pb-20">
+            
+            <!-- Column 1: CBC (Año 0) -->
+            <div class="col-column flex flex-col gap-3.5 bg-slate-900/30 border border-slate-800/40 p-3 rounded-2xl backdrop-blur-sm">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 px-1">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                        CBC (Año 0)
+                    </h2>
+                    <span id="col-count-0" class="text-xs text-slate-500 font-medium">6 materias</span>
+                </div>
+                <div id="col-cards-0" class="flex flex-col gap-3"></div>
+            </div>
+
+            <!-- Column 2: 1.º Año -->
+            <div class="col-column flex flex-col gap-3.5 bg-slate-900/30 border border-slate-800/40 p-3 rounded-2xl backdrop-blur-sm">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 px-1">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        1.º Año
+                    </h2>
+                    <span id="col-count-1" class="text-xs text-slate-500 font-medium">6 materias</span>
+                </div>
+                <div id="col-cards-1" class="flex flex-col gap-3"></div>
+            </div>
+
+            <!-- Column 3: 2.º Año -->
+            <div class="col-column flex flex-col gap-3.5 bg-slate-900/30 border border-slate-800/40 p-3 rounded-2xl backdrop-blur-sm">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 px-1">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                        2.º Año
+                    </h2>
+                    <span id="col-count-2" class="text-xs text-slate-500 font-medium">10 materias</span>
+                </div>
+                <div id="col-cards-2" class="flex flex-col gap-3"></div>
+            </div>
+
+            <!-- Column 4: 3.º Año -->
+            <div class="col-column flex flex-col gap-3.5 bg-slate-900/30 border border-slate-800/40 p-3 rounded-2xl backdrop-blur-sm">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 px-1">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                        3.º Año
+                    </h2>
+                    <span id="col-count-3" class="text-xs text-slate-500 font-medium">14 materias</span>
+                </div>
+                <div id="col-cards-3" class="flex flex-col gap-3"></div>
+            </div>
+
+            <!-- Column 5: 4.º Año / Cierre -->
+            <div class="col-column flex flex-col gap-3.5 bg-slate-900/30 border border-slate-800/40 p-3 rounded-2xl backdrop-blur-sm">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-800/60 px-1">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        4.º Año / Cierre
+                    </h2>
+                    <span id="col-count-4" class="text-xs text-slate-500 font-medium">11 materias</span>
+                </div>
+                <div id="col-cards-4" class="flex flex-col gap-3"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Modal: Subject Details / Mobile Touch Inspector -->
+    <div id="modal-detail" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-panel">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+            <button onclick="closeModal('modal-detail')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div id="modal-detail-content">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: GitHub Pages Guide & Info -->
+    <div id="modal-help" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-panel">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('modal-help')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-rocket"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Guía de Uso y Publicación</h3>
+                    <p class="text-xs text-slate-400">FIUBA Path Explorer — Path 1: Somos Libres</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-300">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-indigo-400 mb-1 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-mouse-pointer"></i> Interacción Básica
+                    </h4>
+                    <ul class="list-disc list-inside space-y-1 text-slate-400">
+                        <li><strong>Clic en cualquier materia:</strong> Alterna entre aprobada y pendiente con actualización instantánea en cascada.</li>
+                        <li><strong>Pasa el mouse sobre una materia:</strong> Resalta visualmente en azul las correlativas requeridas y las materias dependientes que desbloquea.</li>
+                        <li><strong>Filtro por Carrera:</strong> Selecciona "Ambas Carreras", "Solo Sistemas" o "Solo Informática" en la barra superior para ajustar la visión del plan de estudio.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-emerald-400 mb-1 flex items-center gap-2 text-sm">
+                        <i class="fa-brands fa-github"></i> Publicar en GitHub Pages
+                    </h4>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-400">
+                        <li>Crea un repositorio público en GitHub (ejemplo: <code class="bg-slate-800 text-slate-200 px-1 py-0.5 rounded">fiuba-plan-carrera</code>).</li>
+                        <li>Sube este archivo renombrándolo como <code class="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded">index.html</code> a la rama principal (main/master).</li>
+                        <li>En GitHub, ve a <strong>Settings &gt; Pages</strong>.</li>
+                        <li>En "Build and deployment / Branch", selecciona <strong>main</strong> y carpeta <strong>/ (root)</strong>. Haz clic en Save.</li>
+                        <li>¡Listo! En pocos segundos tendrás tu URL pública para compartir tu avance.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeModal('modal-help')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-xs transition-colors">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        /**
+         * Comprehensive Subject Master Dataset
+         * Scope: 'shared' (Blue), 'sistemas' (Purple), 'informatica' (Emerald)
+         * Column Index: 0 = CBC, 1 = 1er Año, 2 = 2do Año, 3 = 3er Año, 4 = 4to Año / Cierre
+         */
+        const SUBJECTS = [
+            // --- COLUMNA 1: CBC (Año 0) ---
+            { id: 'CBC_ICSE', code: '24', name: 'Sociedad y Estado (CBC)', credits: 4, col: 0, scope: 'shared', type: 'Obligatoria', reqs: [] },
+            { id: 'CBC_IPC', code: '40', name: 'Pensamiento Científico (CBC)', credits: 4, col: 0, scope: 'shared', type: 'Obligatoria', reqs: [] },
+            { id: 'CBC_AMA', code: '66', name: 'Análisis Matemático A (CBC)', credits: 9, col: 0, scope: 'shared', type: 'Obligatoria', reqs: [] },
+            { id: 'CBC_ALBA', code: '62', name: 'Álgebra A (CBC)', credits: 9, col: 0, scope: 'shared', type: 'Obligatoria', reqs: [] },
+            { id: 'CBC_FIS', code: '03', name: 'Física (CBC)', credits: 6, col: 0, scope: 'shared', type: 'Obligatoria', reqs: [] },
+            { id: 'CBC_PC', code: '99', name: 'Pensamiento Computacional (CBC)', credits: 4, col: 0, scope: 'shared', type: 'Obligatoria', reqs: [] },
+
+            // --- COLUMNA 2: 1.º Año ---
+            { id: 'AM2', code: '61.03', name: 'Análisis Matemático II', credits: 8, col: 1, scope: 'shared', type: 'Obligatoria', reqs: ['CBC_AMA', 'CBC_ALBA'] },
+            { id: 'FP', code: '75.40', name: 'Algoritmos y Programación I (FP)', credits: 6, col: 1, scope: 'shared', type: 'Obligatoria', reqs: ['CBC_PC'] },
+            { id: 'IDS', code: '71.01', name: 'Ingeniería, Desarrollo y Sociedad', credits: 3, col: 1, scope: 'shared', type: 'Obligatoria', reqs: ['CBC_ICSE'] },
+            { id: 'ALG', code: '61.08', name: 'Álgebra Lineal', credits: 6, col: 1, scope: 'shared', type: 'Obligatoria', reqs: ['CBC_ALBA'] },
+            { id: 'OC', code: '66.20', name: 'Organización del Computador', credits: 6, col: 1, scope: 'shared', type: 'Obligatoria', reqs: ['FP'] },
+            { id: 'AED', code: '75.41', name: 'Algoritmos y Estructuras de Datos II', credits: 6, col: 1, scope: 'shared', type: 'Obligatoria', reqs: ['FP'] },
+
+            // --- COLUMNA 3: 2.º Año ---
+            { id: 'PROB', code: '61.09', name: 'Probabilidad y Estadística', credits: 6, col: 2, scope: 'shared', type: 'Obligatoria', reqs: ['AM2', 'ALG'] },
+            { id: 'TALG', code: '75.42', name: 'Taller de Programación I', credits: 6, col: 2, scope: 'shared', type: 'Obligatoria', reqs: ['AED', 'OC'] },
+            { id: 'SO', code: '75.08', name: 'Sistemas Operativos', credits: 6, col: 2, scope: 'shared', type: 'Obligatoria', reqs: ['OC', 'AED'] },
+            { id: 'PAR', code: '75.07', name: 'Paradigmas de Programación', credits: 6, col: 2, scope: 'shared', type: 'Obligatoria', reqs: ['AED'] },
+            { id: 'BD', code: '75.15', name: 'Bases de Datos', credits: 6, col: 2, scope: 'shared', type: 'Obligatoria', reqs: ['AED'] },
+            { id: 'MN', code: '75.12', name: 'Métodos Numéricos', credits: 6, col: 2, scope: 'shared', type: 'Obligatoria', reqs: ['AM2', 'ALG'] },
+            { id: 'ISW1', code: '75.09', name: 'Ingeniería de Software I', credits: 6, col: 2, scope: 'shared', type: 'Obligatoria', reqs: ['AED'] },
+            { id: 'TP', code: '75.43', name: 'Trabajos Profesionales', credits: 4, col: 2, scope: 'informatica', type: 'Obligatoria', reqs: ['ISW1'] },
+            { id: 'E_AM3', code: '61.10', name: 'Análisis Matemático III', credits: 6, col: 2, scope: 'informatica', type: 'Electiva', reqs: ['AM2'] },
+            { id: 'E_TALG2', code: '75.52', name: 'Taller de Programación II', credits: 4, col: 2, scope: 'sistemas', type: 'Electiva', reqs: ['TALG'] },
+
+            // --- COLUMNA 4: 3.º Año ---
+            { id: 'CD', code: '75.50', name: 'Introducción a la Ciencia de Datos', credits: 6, col: 3, scope: 'shared', type: 'Obligatoria', reqs: ['PROB', 'BD'] },
+            { id: 'REDES', code: '66.70', name: 'Redes de Computadoras', credits: 6, col: 3, scope: 'shared', type: 'Obligatoria', reqs: ['SO'] },
+            { id: 'GDSI', code: '71.40', name: 'Gestión del Desarrollo de Sistemas / Informáticos', credits: 6, col: 3, scope: 'shared', type: 'Obligatoria', reqs: ['ISW1'] },
+            { id: 'PCONC', code: '75.53', name: 'Programación Concurrente', credits: 6, col: 3, scope: 'informatica', type: 'Obligatoria', reqs: ['SO', 'TALG'] },
+            { id: 'ISW2', code: '75.10', name: 'Ingeniería de Software II', credits: 6, col: 3, scope: 'shared', type: 'Obligatoria', reqs: [] }, // Dynamic reqs computed based on active scope
+            { id: 'ECOINFO', code: '71.18', name: 'Economía e Informática', credits: 4, col: 3, scope: 'sistemas', type: 'Obligatoria', reqs: ['IDS'] },
+            { id: 'FISINF', code: '62.01', name: 'Física para Informática', credits: 6, col: 3, scope: 'informatica', type: 'Obligatoria', reqs: ['CBC_FIS', 'AM2'] },
+            { id: 'EBT1', code: '71.55', name: 'Emprendimientos Tecnológicos I', credits: 3, col: 3, scope: 'informatica', type: 'Obligatoria', reqs: ['IDS'] },
+            { id: 'SD1', code: '75.71', name: 'Sistemas Distribuidos I', credits: 6, col: 3, scope: 'informatica', type: 'Obligatoria', reqs: ['REDES'] },
+            { id: 'E_SIM', code: '75.26', name: 'Simulación', credits: 6, col: 3, scope: 'informatica', type: 'Electiva', reqs: ['PROB'] },
+            { id: 'E_LC1', code: '75.58', name: 'Lógica y Computabilidad', credits: 6, col: 3, scope: 'informatica', type: 'Electiva', reqs: ['AED'] },
+            { id: 'E_CRYPT1', code: '75.59', name: 'Criptografía y Seguridad', credits: 6, col: 3, scope: 'informatica', type: 'Electiva', reqs: ['REDES'] },
+            { id: 'E_ARQSW', code: '75.74', name: 'Arquitectura de Software', credits: 6, col: 3, scope: 'informatica', type: 'Electiva', reqs: ['ISW1', 'SO'] },
+            { id: 'E_SEGINFO', code: '75.60', name: 'Seguridad Informática Avanzada', credits: 6, col: 3, scope: 'sistemas', type: 'Electiva', reqs: ['REDES'] },
+
+            // --- COLUMNA 5: 4.º Año / Cierre ---
+            { id: 'TSI', code: '75.62', name: 'Taller de Sistemas de Información', credits: 6, col: 4, scope: 'informatica', type: 'Obligatoria', reqs: ['GDSI', 'ISW2'] },
+            { id: 'EBT2', code: '71.56', name: 'Emprendimientos Tecnológicos II', credits: 3, col: 4, scope: 'informatica', type: 'Obligatoria', reqs: ['EBT1'] },
+            { id: 'TIF', code: '75.99', name: 'Trabajo Integrador Final (Tesis / TIF)', credits: 12, col: 4, scope: 'shared', type: 'Obligatoria', reqs: ['GDSI', 'ISW2'] },
+            { id: 'E_ML', code: '75.70', name: 'Machine Learning Aplicado', credits: 6, col: 4, scope: 'shared', type: 'Electiva', reqs: ['CD', 'PROB'] },
+            { id: 'E_REDES2', code: '66.72', name: 'Redes Avanzadas y Teleinformática', credits: 6, col: 4, scope: 'sistemas', type: 'Electiva', reqs: ['REDES'] },
+            { id: 'E_OPT', code: '75.64', name: 'Optimización de Sistemas', credits: 6, col: 4, scope: 'informatica', type: 'Electiva', reqs: ['MN'] },
+            { id: 'E_COMP', code: '75.14', name: 'Compiladores e Intérpretes', credits: 6, col: 4, scope: 'informatica', type: 'Electiva', reqs: ['PAR', 'SO'] },
+            { id: 'E_SD2', code: '75.72', name: 'Sistemas Distribuidos II', credits: 6, col: 4, scope: 'informatica', type: 'Electiva', reqs: ['SD1'] },
+            { id: 'E_DL', code: '75.76', name: 'Deep Learning', credits: 6, col: 4, scope: 'informatica', type: 'Electiva', reqs: ['E_ML'] },
+            { id: 'E_RL', code: '75.77', name: 'Reinforcement Learning', credits: 6, col: 4, scope: 'informatica', type: 'Electiva', reqs: ['E_ML'] },
+            { id: 'E_INGDAT', code: '75.78', name: 'Ingeniería de Datos Masivos', credits: 6, col: 4, scope: 'informatica', type: 'Electiva', reqs: ['CD', 'BD'] }
+        ];
+
+        // Total career goal credits
+        const GOAL_CREDITS_SISTEMAS = 200;
+        const GOAL_CREDITS_INFORMATICA = 226;
+
+        // State variables
+        let currentCareerFilter = 'all'; // 'all', 'sistemas', 'informatica'
+        let approvedSubjectIds = new Set();
+        let hoveredSubjectId = null;
+        let showOnlyOptativas = false;
+        let searchFilterText = '';
+
+        // Load saved state from LocalStorage
+        function initApp() {
+            try {
+                const saved = localStorage.getItem('fiuba_path_approved_v2');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        approvedSubjectIds = new Set(parsed);
+                    }
+                }
+            } catch (e) {
+                console.error("Could not load progress", e);
+            }
+
+            // Window resize hook for lines calculation
+            window.addEventListener('resize', debounce(() => {
+                renderSVGConnections();
+            }, 100));
+
+            // Scroll hook for updating lines dynamically
+            const scrollContainer = document.getElementById('main-scroll-container');
+            if (scrollContainer) {
+                scrollContainer.addEventListener('scroll', () => {
+                    renderSVGConnections();
+                });
+            }
+
+            renderGrid();
+        }
+
+        /**
+         * Dynamic Prerequisites Resolver
+         * Evaluates ISW2 rule: [BD, ISW1] in Sistemas, [BD, ISW1, TP] in Informática/Ambas
+         */
+        function getSubjectPrerequisites(subjId) {
+            const subj = SUBJECTS.find(s => s.id === subjId);
+            if (!subj) return [];
+            
+            if (subjId === 'ISW2') {
+                if (currentCareerFilter === 'sistemas') {
+                    return ['BD', 'ISW1'];
+                } else {
+                    return ['BD', 'ISW1', 'TP'];
+                }
+            }
+            return subj.reqs;
+        }
+
+        /**
+         * Check if subject is unlocked based on approved requisites
+         */
+        function isSubjectUnlocked(subjId) {
+            const reqs = getSubjectPrerequisites(subjId);
+            if (reqs.length === 0) return true;
+            return reqs.every(reqId => approvedSubjectIds.has(reqId));
+        }
+
+        /**
+         * Normalize text for accent-insensitive search
+         */
+        function normalizeString(str) {
+            return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        /**
+         * Handle career filter tab switching
+         */
+        function setCareerFilter(filter) {
+            currentCareerFilter = filter;
+            
+            // Update button UI tabs
+            document.querySelectorAll('.career-tab').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`btn-filter-${filter}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                activeBtn.classList.remove('text-slate-400');
+            }
+
+            renderGrid();
+        }
+
+        /**
+         * Filter toggles
+         */
+        function toggleOptativasOnly() {
+            showOnlyOptativas = !showOnlyOptativas;
+            const btn = document.getElementById('btn-toggle-optativas');
+            if (showOnlyOptativas) {
+                btn.classList.add('bg-amber-500/20', 'border-amber-500/60', 'text-amber-300');
+                btn.classList.remove('bg-slate-950', 'text-slate-400');
+            } else {
+                btn.classList.remove('bg-amber-500/20', 'border-amber-500/60', 'text-amber-300');
+                btn.classList.add('bg-slate-950', 'text-slate-400');
+            }
+            renderGrid();
+        }
+
+        function onSearchChange() {
+            searchFilterText = normalizeString(document.getElementById('search-input').value.trim());
+            renderGrid();
+        }
+
+        /**
+         * Core Render Grid Loop
+         */
+        function renderGrid() {
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            // Clear all 5 annual column elements
+            for (let i = 0; i < 5; i++) {
+                const colEl = document.getElementById(`col-cards-${i}`);
+                if (colEl) colEl.innerHTML = '';
+            }
+
+            const visibleCounts = [0, 0, 0, 0, 0];
+
+            SUBJECTS.forEach(subj => {
+                // Filter 1: Scope Career Filter
+                if (currentCareerFilter === 'sistemas' && subj.scope === 'informatica') return;
+                if (currentCareerFilter === 'informatica' && subj.scope === 'sistemas') return;
+
+                // Filter 2: Search Query
+                if (searchFilterText) {
+                    const matchName = normalizeString(subj.name).includes(searchFilterText);
+                    const matchCode = normalizeString(subj.code).includes(searchFilterText);
+                    if (!matchName && !matchCode) return;
+                }
+
+                // Filter 3: Optativas Toggle
+                if (showOnlyOptativas && subj.type !== 'Electiva') return;
+
+                const isApproved = approvedSubjectIds.has(subj.id);
+                const isUnlocked = isSubjectUnlocked(subj.id);
+
+                // Filter 4: Status Filter Dropdown
+                if (statusFilter === 'approved' && !isApproved) return;
+                if (statusFilter === 'available' && (!isUnlocked || isApproved)) return;
+                if (statusFilter === 'locked' && isUnlocked) return;
+
+                // Build Card HTML Component
+                const cardEl = createSubjectCardDOM(subj, isApproved, isUnlocked);
+                const colTarget = document.getElementById(`col-cards-${subj.col}`);
+                if (colTarget) {
+                    colTarget.appendChild(cardEl);
+                    visibleCounts[subj.col]++;
+                }
+            });
+
+            // Update Column Counts
+            for (let i = 0; i < 5; i++) {
+                const countEl = document.getElementById(`col-count-${i}`);
+                if (countEl) countEl.textContent = `${visibleCounts[i]} materia${visibleCounts[i] !== 1 ? 's' : ''}`;
+            }
+
+            // Update Progress Bars
+            updateProgressMeters();
+
+            // Re-render lines on next animation frame
+            requestAnimationFrame(() => {
+                renderSVGConnections();
+            });
+        }
+
+        /**
+         * Card Component Generator
+         * Maintains FULL rich color gradient & border even when locked (NO GRAYSCALE!)
+         */
+        function createSubjectCardDOM(subj, isApproved, isUnlocked) {
+            const card = document.createElement('div');
+            card.id = `card-${subj.id}`;
+            card.className = `subject-card relative p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between min-h-[110px] select-none`;
+
+            // Color scheme styling depending on Scope
+            let bgGradient = '';
+            let borderStyle = '';
+            let accentText = '';
+            let glowStyle = '';
+
+            if (subj.scope === 'sistemas') {
+                bgGradient = 'bg-gradient-to-br from-purple-950/90 via-purple-900/80 to-violet-950/90';
+                borderStyle = 'border-purple-500/50 hover:border-purple-400';
+                accentText = 'text-purple-300';
+                glowStyle = 'shadow-purple-900/30';
+            } else if (subj.scope === 'informatica') {
+                bgGradient = 'bg-gradient-to-br from-emerald-950/90 via-teal-950/80 to-emerald-900/90';
+                borderStyle = 'border-emerald-500/50 hover:border-emerald-400';
+                accentText = 'text-emerald-300';
+                glowStyle = 'shadow-emerald-900/30';
+            } else {
+                // Shared / Core
+                bgGradient = 'bg-gradient-to-br from-blue-950/90 via-indigo-950/80 to-blue-900/90';
+                borderStyle = 'border-blue-500/50 hover:border-blue-400';
+                accentText = 'text-blue-300';
+                glowStyle = 'shadow-blue-900/30';
+            }
+
+            // Status Modifier Classes
+            if (isApproved) {
+                borderStyle = 'border-amber-400 bg-slate-900/90 shadow-lg shadow-amber-500/10 ring-1 ring-amber-400/40';
+            } else if (isUnlocked) {
+                borderStyle += ' pulse-available';
+            }
+
+            card.className += ` ${bgGradient} ${borderStyle} ${glowStyle}`;
+
+            // Required prerequisites checklist for tooltips
+            const reqs = getSubjectPrerequisites(subj.id);
+            const missingReqs = reqs.filter(rId => !approvedSubjectIds.has(rId));
+
+            // Badge tags
+            let typeBadgeHtml = '';
+            if (subj.type === 'Electiva') {
+                typeBadgeHtml = `<span class="border border-dashed border-amber-400/70 bg-amber-500/10 text-amber-300 font-semibold px-2 py-0.5 rounded text-[10px]">OPTATIVA</span>`;
+            } else {
+                typeBadgeHtml = `<span class="text-slate-400 text-[10px] font-medium">${subj.code}</span>`;
+            }
+
+            // Status Icon & Badge
+            let statusBadgeHtml = '';
+            if (isApproved) {
+                statusBadgeHtml = `
+                    <span class="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-400/50">
+                        <i class="fa-solid fa-check text-[9px]"></i> Aprobada
+                    </span>`;
+            } else if (isUnlocked) {
+                statusBadgeHtml = `
+                    <span class="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-500/40">
+                        <i class="fa-solid fa-unlock text-[9px]"></i> Disponible
+                    </span>`;
+            } else {
+                statusBadgeHtml = `
+                    <span class="inline-flex items-center gap-1 bg-slate-800/80 text-slate-300 text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-700">
+                        <i class="fa-solid fa-lock text-[9px]"></i> Bloqueada
+                    </span>`;
+            }
+
+            card.innerHTML = `
+                <div>
+                    <div class="flex items-center justify-between gap-1 mb-1.5">
+                        ${typeBadgeHtml}
+                        <span class="text-[11px] font-bold text-slate-300 bg-slate-950/60 px-1.5 py-0.5 rounded border border-slate-800">${subj.credits} cr</span>
+                    </div>
+                    <h3 class="text-xs font-bold leading-tight text-slate-100 group-hover:text-white transition-colors mb-2">
+                        ${subj.name}
+                    </h3>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 mt-2">
+                    ${statusBadgeHtml}
+                    <button onclick="openSubjectModal(event, '${subj.id}')" class="text-slate-400 hover:text-slate-200 text-xs px-1.5 py-0.5 rounded hover:bg-slate-800/60 transition-colors" title="Ver detalles y correlativas">
+                        <i class="fa-solid fa-circle-info"></i>
+                    </button>
+                </div>
+            `;
+
+            // Card Click Event Handler (Toggle Approval)
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return; // Ignore if info button was clicked
+                toggleSubjectApproval(subj.id);
+            });
+
+            // Hover Events for SVG Dependency Highlighting
+            card.addEventListener('mouseenter', () => {
+                hoveredSubjectId = subj.id;
+                highlightDependencies(subj.id);
+            });
+            card.addEventListener('mouseleave', () => {
+                hoveredSubjectId = null;
+                resetDependencyHighlight();
+            });
+
+            return card;
+        }
+
+        /**
+         * Toggle Subject Approval with Cascade Logic
+         */
+        function toggleSubjectApproval(subjId) {
+            if (approvedSubjectIds.has(subjId)) {
+                approvedSubjectIds.delete(subjId);
+                // Also unapprove any dependent subjects that required this subject
+                cascadeUnapprove(subjId);
+                showToast('Materia desmarcada', 'info');
+            } else {
+                const isUnlocked = isSubjectUnlocked(subjId);
+                if (!isUnlocked) {
+                    showToast('¡Correlativas pendientes! Debes aprovar primero sus requisitos.', 'error');
+                    return;
+                }
+                approvedSubjectIds.add(subjId);
+                showToast('¡Materia aprobada!', 'success');
+            }
+
+            saveProgress();
+            renderGrid();
+        }
+
+        /**
+         * Unapprove subjects in cascade if prerequisite is revoked
+         */
+        function cascadeUnapprove(targetId) {
+            let changed = true;
+            while (changed) {
+                changed = false;
+                for (const id of approvedSubjectIds) {
+                    const reqs = getSubjectPrerequisites(id);
+                    if (reqs.includes(targetId) || reqs.some(r => !approvedSubjectIds.has(r))) {
+                        approvedSubjectIds.delete(id);
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        /**
+         * Quick Action: Approve CBC
+         */
+        function approveCBC() {
+            const cbcIds = ['CBC_ICSE', 'CBC_IPC', 'CBC_AMA', 'CBC_ALBA', 'CBC_FIS', 'CBC_PC'];
+            cbcIds.forEach(id => approvedSubjectIds.add(id));
+            saveProgress();
+            renderGrid();
+            showToast('CBC Completo Aprobado 🎓', 'success');
+        }
+
+        /**
+         * Quick Action: Approve Plan por Carrera
+         */
+        function approveCareer(career) {
+            SUBJECTS.forEach(subj => {
+                if (career === 'sistemas' && subj.scope !== 'informatica') {
+                    approvedSubjectIds.add(subj.id);
+                } else if (career === 'informatica' && subj.scope !== 'sistemas') {
+                    approvedSubjectIds.add(subj.id);
+                }
+            });
+            saveProgress();
+            renderGrid();
+            showToast(`Plan completo de ${career === 'sistemas' ? 'Lic. en Sistemas' : 'Ing. en Informática'} aprobado 🎉`, 'success');
+        }
+
+        /**
+         * Instant Non-Blocking Reset Button (0%)
+         */
+        function resetProgress() {
+            approvedSubjectIds.clear();
+            saveProgress();
+            renderGrid();
+            showToast('Progreso reiniciado a 0%', 'info');
+        }
+
+        /**
+         * Update Dual Progress Meters in Real-time
+         */
+        function updateProgressMeters() {
+            // Sistemas Calculation
+            const sistemasSubjects = SUBJECTS.filter(s => s.scope === 'shared' || s.scope === 'sistemas');
+            const approvedSistemas = sistemasSubjects.filter(s => approvedSubjectIds.has(s.id));
+            const creditsSistemas = approvedSistemas.reduce((acc, curr) => acc + curr.credits, 0);
+            const percentSistemas = Math.min(100, Math.round((creditsSistemas / GOAL_CREDITS_SISTEMAS) * 100));
+
+            document.getElementById('text-progress-sistemas').textContent = `${creditsSistemas} / ${GOAL_CREDITS_SISTEMAS} cr (${percentSistemas}%)`;
+            document.getElementById('bar-progress-sistemas').style.width = `${percentSistemas}%`;
+
+            // Informática Calculation
+            const informaticaSubjects = SUBJECTS.filter(s => s.scope === 'shared' || s.scope === 'informatica');
+            const approvedInformatica = informaticaSubjects.filter(s => approvedSubjectIds.has(s.id));
+            const creditsInformatica = approvedInformatica.reduce((acc, curr) => acc + curr.credits, 0);
+            const percentInformatica = Math.min(100, Math.round((creditsInformatica / GOAL_CREDITS_INFORMATICA) * 100));
+
+            document.getElementById('text-progress-informatica').textContent = `${creditsInformatica} / ${GOAL_CREDITS_INFORMATICA} cr (${percentInformatica}%)`;
+            document.getElementById('bar-progress-informatica').style.width = `${percentInformatica}%`;
+        }
+
+        /**
+         * Save state to LocalStorage
+         */
+        function saveProgress() {
+            try {
+                localStorage.setItem('fiuba_path_approved_v2', JSON.stringify(Array.from(approvedSubjectIds)));
+            } catch (e) {
+                console.error("Storage write error", e);
+            }
+        }
+
+        /**
+         * Export progress to JSON file
+         */
+        function exportProgress() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(Array.from(approvedSubjectIds)));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `fiuba_path_progreso_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('Progreso exportado a JSON', 'success');
+        }
+
+        /**
+         * Import progress from JSON file
+         */
+        function importProgress(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        approvedSubjectIds = new Set(imported);
+                        saveProgress();
+                        renderGrid();
+                        showToast('Progreso importado con éxito', 'success');
+                    } else {
+                        showToast('Archivo JSON inválido', 'error');
+                    }
+                } catch (err) {
+                    showToast('Error al leer el archivo JSON', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        /**
+         * SVG Bezier Connector Lines Rendering Engine (60fps)
+         */
+        function renderSVGConnections() {
+            const svg = document.getElementById('svg-connections');
+            if (!svg) return;
+
+            // Remove existing line elements except defs
+            const existingPaths = svg.querySelectorAll('path');
+            existingPaths.forEach(p => p.remove());
+
+            const containerRect = svg.getBoundingClientRect();
+
+            SUBJECTS.forEach(subj => {
+                // Check if target subject card is visible in DOM
+                const targetCard = document.getElementById(`card-${subj.id}`);
+                if (!targetCard) return;
+
+                const reqs = getSubjectPrerequisites(subj.id);
+                reqs.forEach(reqId => {
+                    const sourceCard = document.getElementById(`card-${reqId}`);
+                    if (!sourceCard) return;
+
+                    const srcRect = sourceCard.getBoundingClientRect();
+                    const tgtRect = targetCard.getBoundingClientRect();
+
+                    // Calculate coordinates relative to SVG container
+                    const startX = srcRect.right - containerRect.left;
+                    const startY = srcRect.top + srcRect.height / 2 - containerRect.top;
+                    const endX = tgtRect.left - containerRect.left;
+                    const endY = tgtRect.top + tgtRect.height / 2 - containerRect.top;
+
+                    // Bezier control points calculation
+                    const dx = Math.abs(endX - startX);
+                    const controlOffset = Math.max(30, dx * 0.4);
+
+                    let pathD = '';
+                    if (startX < endX) {
+                        pathD = `M ${startX} ${startY} C ${startX + controlOffset} ${startY}, ${endX - controlOffset} ${endY}, ${endX} ${endY}`;
+                    } else {
+                        // Intra-column or backwards curve
+                        const curveHeight = (startY < endY) ? 40 : -40;
+                        pathD = `M ${startX} ${startY} C ${startX + 50} ${startY + curveHeight}, ${endX - 50} ${endY + curveHeight}, ${endX} ${endY}`;
+                    }
+
+                    const isSourceApproved = approvedSubjectIds.has(reqId);
+                    const isTargetApproved = approvedSubjectIds.has(subj.id);
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', pathD);
+                    path.setAttribute('class', 'dep-line');
+                    path.setAttribute('data-source', reqId);
+                    path.setAttribute('data-target', subj.id);
+
+                    // Dynamic Styling
+                    if (isSourceApproved && isTargetApproved) {
+                        path.setAttribute('stroke', '#10b981');
+                        path.setAttribute('stroke-width', '2');
+                        path.setAttribute('opacity', '0.4');
+                        path.setAttribute('marker-end', 'url(#arrow-approved)');
+                    } else if (isSourceApproved) {
+                        path.setAttribute('stroke', '#38bdf8');
+                        path.setAttribute('stroke-width', '1.5');
+                        path.setAttribute('opacity', '0.5');
+                        path.setAttribute('marker-end', 'url(#arrow-active)');
+                    } else {
+                        path.setAttribute('stroke', '#475569');
+                        path.setAttribute('stroke-width', '1');
+                        path.setAttribute('opacity', '0.25');
+                        path.setAttribute('stroke-dasharray', '4 4');
+                        path.setAttribute('marker-end', 'url(#arrow-default)');
+                    }
+
+                    svg.appendChild(path);
+                });
+            });
+        }
+
+        /**
+         * Highlight lines and cards on hover
+         */
+        function highlightDependencies(subjectId) {
+            const svg = document.getElementById('svg-connections');
+            if (!svg) return;
+
+            const paths = svg.querySelectorAll('path');
+            paths.forEach(path => {
+                const src = path.getAttribute('data-source');
+                const tgt = path.getAttribute('data-target');
+
+                if (tgt === subjectId) {
+                    // Incoming prerequisite line
+                    path.setAttribute('stroke', '#38bdf8');
+                    path.setAttribute('stroke-width', '3');
+                    path.setAttribute('opacity', '1');
+                    path.removeAttribute('stroke-dasharray');
+
+                    const srcCard = document.getElementById(`card-${src}`);
+                    if (srcCard) srcCard.classList.add('ring-2', 'ring-sky-400', 'scale-[1.02]');
+                } else if (src === subjectId) {
+                    // Outgoing dependency line
+                    path.setAttribute('stroke', '#a855f7');
+                    path.setAttribute('stroke-width', '3');
+                    path.setAttribute('opacity', '1');
+                    path.removeAttribute('stroke-dasharray');
+
+                    const tgtCard = document.getElementById(`card-${tgt}`);
+                    if (tgtCard) tgtCard.classList.add('ring-2', 'ring-purple-400', 'scale-[1.02]');
+                } else {
+                    path.setAttribute('opacity', '0.05');
+                }
+            });
+        }
+
+        function resetDependencyHighlight() {
+            document.querySelectorAll('.subject-card').forEach(card => {
+                card.classList.remove('ring-2', 'ring-sky-400', 'ring-purple-400', 'scale-[1.02]');
+            });
+            renderSVGConnections();
+        }
+
+        /**
+         * Modal & Touch Inspector Logic
+         */
+        function openSubjectModal(event, subjId) {
+            event.stopPropagation();
+            const subj = SUBJECTS.find(s => s.id === subjId);
+            if (!subj) return;
+
+            const reqs = getSubjectPrerequisites(subjId);
+            const isApproved = approvedSubjectIds.has(subjId);
+            const isUnlocked = isSubjectUnlocked(subjId);
+
+            const modalContent = document.getElementById('modal-detail-content');
+            
+            let scopeBadge = '';
+            if (subj.scope === 'sistemas') {
+                scopeBadge = '<span class="bg-purple-900/60 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded text-xs">Lic. en Sistemas</span>';
+            } else if (subj.scope === 'informatica') {
+                scopeBadge = '<span class="bg-emerald-900/60 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded text-xs">Ing. en Informática</span>';
+            } else {
+                scopeBadge = '<span class="bg-blue-900/60 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded text-xs">Compartida / Núcleo</span>';
+            }
+
+            let reqListHtml = '';
+            if (reqs.length === 0) {
+                reqListHtml = '<li class="text-slate-400 italic text-xs">Sin correlativas previas requeridas.</li>';
+            } else {
+                reqListHtml = reqs.map(rId => {
+                    const rSubj = SUBJECTS.find(s => s.id === rId);
+                    const rApproved = approvedSubjectIds.has(rId);
+                    return `
+                        <li class="flex items-center justify-between py-1 border-b border-slate-800 text-xs">
+                            <span class="${rApproved ? 'text-emerald-400 font-medium' : 'text-slate-300'}">
+                                ${rSubj ? rSubj.name : rId} (${rSubj ? rSubj.code : ''})
+                            </span>
+                            ${rApproved ? 
+                                '<span class="text-[10px] text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800">Aprobada</span>' : 
+                                '<span class="text-[10px] text-rose-400 bg-rose-950 px-1.5 py-0.5 rounded border border-rose-800">Pendiente</span>'}
+                        </li>`;
+                }).join('');
+            }
+
+            modalContent.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    ${scopeBadge}
+                    ${subj.type === 'Electiva' ? '<span class="border border-dashed border-amber-400/80 bg-amber-500/10 text-amber-300 text-xs px-2 py-0.5 rounded font-bold">OPTATIVA</span>' : '<span class="bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded">Obligatoria</span>'}
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1">${subj.name}</h3>
+                <p class="text-xs text-slate-400 mb-4">Código: <span class="font-mono text-slate-200">${subj.code}</span> · Créditos: <span class="font-bold text-indigo-400">${subj.credits} cr</span></p>
+
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 mb-4">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-diagram-project text-indigo-400"></i>
+                        Correlativas Requeridas
+                    </h4>
+                    <ul class="space-y-1">
+                        ${reqListHtml}
+                    </ul>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <span class="text-xs text-slate-400">Estado actual:</span>
+                    <button onclick="toggleSubjectApproval('${subj.id}'); closeModal('modal-detail');" class="px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md ${isApproved ? 'bg-rose-950 text-rose-300 border border-rose-800 hover:bg-rose-900' : 'bg-emerald-600 text-white hover:bg-emerald-500'}">
+                        ${isApproved ? 'Desmarcar Aprobación' : 'Marcar como Aprobada'}
+                    </button>
+                </div>
+            `;
+
+            openModal('modal-detail');
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.add('hidden');
+        }
+
+        /**
+         * Notification Toast System
+         */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            let bgClass = 'bg-slate-900 border-slate-700 text-slate-200';
+            let icon = 'fa-circle-info text-indigo-400';
+
+            if (type === 'success') {
+                bgClass = 'bg-slate-900 border-emerald-500/50 text-emerald-200 shadow-emerald-950/50';
+                icon = 'fa-circle-check text-emerald-400';
+            } else if (type === 'error') {
+                bgClass = 'bg-slate-900 border-rose-500/50 text-rose-200 shadow-rose-950/50';
+                icon = 'fa-triangle-exclamation text-rose-400';
+            }
+
+            toast.className = `flex items-center gap-2.5 px-4 py-3 rounded-xl border ${bgClass} text-xs font-semibold shadow-xl transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Animate out
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /**
+         * Utility: Debounce helper for resize event
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Initialize on DOM Ready
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
